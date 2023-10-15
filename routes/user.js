@@ -7,17 +7,6 @@ user.post('/login', (req, res, next) => {
     const {user_name, user_password} = req.body;
     
     if (user_name && user_password ) {
-        /* var query = "select user_key from users where user_name = ? and user_password = ?";
-        var params = [user_name, user_password];
-
-        DB.all(query, params, (err, consult) => {
-            if (consult.length == 1) {
-                return res.status(200).json({ code: 200, message: consult[0].user_key});
-            }
-            else{
-                return res.status(400).json({ code: 400, message: "Usuario y/o contraseña incorrecta"});   
-            }                     
-        });  */
         const consult = DB.prepare('select user_key from users where user_name = ? and user_password = ?');
         const result = consult.all(user_name, user_password);
 
