@@ -1,0 +1,34 @@
+{
+  "homepage": "https://github.com/PureCilantro/expressWS#readme",
+  "author": "Alan Espinosa",
+  "license": "ISC",
+  "name": "expressws",
+  "version": "1.0.0",
+  "description": "An educated attempt at an API REST or something",
+  "main": "index.js",
+  "scripts": {
+    "start": "nodemon index",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/PureCilantro/expressWS.git"
+  },
+  "keywords": [
+    "api",
+    "rest",
+    "express",
+    "nodejs"
+  ],
+  "bugs": {
+    "url": "https://github.com/PureCilantro/expressWS/issues"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.18.2",
+    "jsonwebtoken": "^9.0.2",
+    "morgan": "^1.10.0",
+    "nodemon": "^3.0.1",
+    "sqlite3": "^5.1.6"
+  }
+}
