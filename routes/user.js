@@ -1,9 +1,11 @@
+// Dependencies
 const express = require('express');
 const user = express.Router();
 const DB = require('../config/database');
 const jwt = require('jsonwebtoken');
 
-user.post('/login', (req, res, next) => {
+// Checks for user_name & user_password in db, if found returns their user_key
+user.post('/login', (req, res, next) => { 
     const {user_name, user_password} = req.body;
     
     if (user_name && user_password ) {
@@ -22,18 +24,27 @@ user.post('/login', (req, res, next) => {
     }    
 })
 
-user.post('/getToken', (req, res, next) => {
+// Checks if user_key is valid and returns a 5 second token to consume the API
+user.post('/getToken', (req, res, next) => { 
     const {user_key} = req.body;
-    
-    if (user_key) {   
-        const token = jwt.sign({
-            user_key: user_key
-        }, "debugkey", { expiresIn: '60s' });
-        return res.status(200).json({ code: 200, token: token});                    
+
+    if (user_key) {
+        const consult = DB.prepare('select count(*) from users where user_key = ?');
+        const result = consult.get(user_key);
+
+        if (result.length > 0) {
+            const token = jwt.sign({
+                user_key: user_key
+            }, "debugkey", { expiresIn: '5s' });
+            return res.status(200).json({ code: 200, token: token});
+        }
+        else{
+            return res.status(401).json({ code: 401, message: "No tienes permiso"});
+        }
     }
     else{
         return res.status(500).json({ code: 500, message: "Campos incompletos"});
-    }    
+    }
 })
 
 module.exports = user;

@@ -2,6 +2,7 @@ const express = require('express');
 const content = express.Router();
 const DB = require('../config/database');
 
+// Returns all employees from db
 content.get('/', (req, res, next) => {
     const consult = DB.prepare('select * from employees');
     const result = consult.all();
@@ -9,6 +10,7 @@ content.get('/', (req, res, next) => {
     return res.status(200).json({ code: 200, message: result});
 });
 
+// Searches and returns all employees that match the input
 content.get('/:name([A-Za-z]+)', (req, res, next) => {
     var nameToSearch = "%" + req.params.name + "%";
     const consult = DB.prepare('select * from employees where emp_name like ?');
@@ -17,6 +19,7 @@ content.get('/:name([A-Za-z]+)', (req, res, next) => {
     return res.status(200).json({ code: 200, result: result});
 })
 
+// Creates a new row with the input information of the employee
 content.post('/', (req, res, next) => {
     const { emp_name, emp_lastname, emp_phone, emp_mail, emp_address} = req.body;
     
@@ -34,6 +37,7 @@ content.post('/', (req, res, next) => {
     }     
 })
 
+// Updates an existing row with the input information of the employee, note that all info must be sent, changed or not
 content.put('/', (req, res, next) => {
     const { emp_name, emp_lastname, emp_phone, emp_mail, emp_address, emp_id} = req.body;
     
@@ -55,6 +59,7 @@ content.put('/', (req, res, next) => {
     }     
 })
 
+// Deletes an existing rown based on the employee id
 content.delete('/', (req, res, next) => {
     const {emp_id} = req.body;
     
