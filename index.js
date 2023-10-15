@@ -5,6 +5,7 @@ const cors = require('cors');
 const app = express();
 //Routers
 const user = require('./routes/user');
+const content = require('./routes/content');
 //Middleware
 const auth = require('./middleware/auth');
 const notFound = require('./middleware/notFound');
@@ -14,13 +15,11 @@ app.use(morgan('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true})); 
 
-app.get("/", (req, res, next) => {
-    return res.status(200).json({ code: 200, message: "OK"});
-});
-
 app.use('/user', user);
 
 app.use(auth);
+
+app.use('/content', content);
 
 app.use(notFound)
 

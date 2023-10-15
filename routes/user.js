@@ -7,7 +7,7 @@ user.post('/login', (req, res, next) => {
     const {user_name, user_password} = req.body;
     
     if (user_name && user_password ) {
-        var query = "select user_key from users where user_name = ? and user_password = ?";
+        /* var query = "select user_key from users where user_name = ? and user_password = ?";
         var params = [user_name, user_password];
 
         DB.all(query, params, (err, consult) => {
@@ -17,10 +17,19 @@ user.post('/login', (req, res, next) => {
             else{
                 return res.status(400).json({ code: 400, message: "Usuario y/o contraseña incorrecta"});   
             }                     
-        });        
+        });  */
+        const consult = DB.prepare('select user_key from users where user_name = ? and user_password = ?');
+        const result = consult.all(user_name, user_password);
+
+        if (result.length == 1) {
+            return res.status(200).json({ code: 200, user_key: result[0].user_key});
+        }
+        else{
+            return res.status(400).json({ code: 400, message: "Usuario y/o contraseña incorrecta"});   
+        }
     }
     else{
-        return res.status(500).json({ code: 500, message: "Capos incompletos"});
+        return res.status(500).json({ code: 500, message: "Campos incompletos"});
     }    
 })
 
@@ -30,11 +39,11 @@ user.post('/getToken', (req, res, next) => {
     if (user_key) {   
         const token = jwt.sign({
             user_key: user_key
-        }, "debugkey", { expiresIn: '5s' });
-        return res.status(200).json({ code: 200, message: token});                    
+        }, "debugkey", { expiresIn: '60s' });
+        return res.status(200).json({ code: 200, token: token});                    
     }
     else{
-        return res.status(500).json({ code: 500, message: "Capos incompletos"});
+        return res.status(500).json({ code: 500, message: "Campos incompletos"});
     }    
 })
 
