@@ -29,10 +29,10 @@ user.post('/getToken', (req, res, next) => {
     const {user_key} = req.body;
 
     if (user_key) {
-        const consult = DB.prepare('select count(*) from users where user_key = ?');
+        const consult = DB.prepare('select count(*) as count from users where user_key = ?');
         const result = consult.get(user_key);
 
-        if (result.length > 0) {
+        if (result.count > 0) {
             const token = jwt.sign({
                 user_key: user_key
             }, "debugkey", { expiresIn: '5s' });
