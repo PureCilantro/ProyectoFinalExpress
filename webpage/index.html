@@ -13,7 +13,7 @@
         <div class="panel">
             <div class="panel__control">
                 <input type="text" name="search" id="searchInput" autocomplete="off">
-                <button type="button" id="searchBtn">Buscar</button>
+                <!-- <button type="button" id="searchBtn">Buscar</button> -->
                 <button type="button" id="newRegisterBtn">Nuevo registro</button>
             </div>
             <div class="panel__table">
@@ -365,7 +365,7 @@
 
         domShadow.addEventListener('click', event => { if (event.target == domShadow) hideDialog(); });
         domLogOut.addEventListener('click', logOut);
-        domSearchBtn.addEventListener('click', () => makeSearch(domSearchInput.value));
+        //domSearchBtn.addEventListener('click', () => makeSearch(domSearchInput.value));
         domSearchInput.addEventListener('input', () => makeSearch(domSearchInput.value));
         domNewRegisterBtn.addEventListener('click', showNewRegisterDialog);
 
