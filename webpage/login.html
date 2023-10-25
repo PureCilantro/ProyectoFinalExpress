@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/login.css">
+    <title>Iniciar sesión</title>
+</head>
+<body>
+    
+    <div class="container">
+        <form class="form">
+            <div class="form__title">
+                <h1>Bienvenido</h1>
+                <h3>Por favor, introduce tus datos</h3>
+            </div>
+            <div class="form__inputContainer">
+                <label>Nombre de usuario <input type="text" name="username" id="usernameInput"></label>
+                <label>Contraseña <input type="password" name="password" id="passwordInput"></input></label>
+                <button type="button" id="submitBtn">Iniciar sesión</button>
+            </div>
+        </form>
+        <p class="copyrightText">Desarrollado por Alan Espinosa Torres y Gerardo Arzate Paredes</p>
+    </div>
+
+    <script src="js/config.js"></script>
+    <script src="js/login.js"></script>
+    <script>
+        const domSubmitBtn = document.getElementById('submitBtn');
+        const domUsernameInput = document.getElementById('usernameInput');
+        const domPasswordInput = document.getElementById('passwordInput');
+
+        function buttonClick() {
+            const username = domUsernameInput.value;
+            const password = domPasswordInput.value;
+
+            if (username && password) {
+                domSubmitBtn.disabled = true;
+
+                login(username, password)
+                    .then(res => {
+                        if (res.status == 'OK') {
+                            sessionStorage.setItem('userKey', res.userKey);
+                            location.href = 'index.html';
+                        } else if (res.status == 'FAILURE') {
+                            alert('Datos incorrectos');
+                        } else {
+                            alert('Ocurrió un error al iniciar sesión');
+                            console.log(res.msg);
+                        }
+                        domSubmitBtn.disabled = false;
+                    })
+                    .catch(err => {
+                        console.log(err);
+                        domSubmitBtn.disabled = false;
+                    });
+            } else {
+                alert('Datos incompletos');
+            }
+        }
+
+        domSubmitBtn.addEventListener('click', buttonClick);
+
+        if (sessionStorage.getItem('userKey')) {
+            location.href = 'index.html';
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/index.css">
+    <title>Recursos Humanos</title>
+</head>
+<body>
+
+    <div class="container" id="container" hidden>
+        <div class="panel">
+            <div class="panel__control">
+                <input type="text" name="search" id="searchInput" autocomplete="off">
+                <button type="button" id="searchBtn">Buscar</button>
+                <button type="button" id="newRegisterBtn">Nuevo registro</button>
+            </div>
+            <div class="panel__table">
+                <div class="panel__table__header" id="tableHeader"></div>
+                <div class="panel__table__body" id="tableBody"></div>
+            </div>
+        </div>
+
+        <a class="logOutText" id="logOut">Cerrar sesión</a>
+    </div>
+    
+    <div class="shadow hidden" id="shadow">
+        <div class="dialog hidden" id="dialog"></div>
+    </div>
+
+    <script src="js/config.js"></script>
+    <script src="js/getToken.js"></script>
+    <script src="js/request.js"></script>
+    <script src="js/logOut.js"></script>
+    <script>
+        const userKey = sessionStorage.getItem('userKey');
+        const domContainer = document.getElementById('container');
+        const domTableHeader = document.getElementById('tableHeader')
+        const domTableBody = document.getElementById('tableBody');
+        const domShadow = document.getElementById('shadow');
+        const domDialog = document.getElementById('dialog');
+        const domLogOut = document.getElementById('logOut');
+        const domSearchInput = document.getElementById('searchInput');
+        const domSearchBtn = document.getElementById('searchBtn');
+        const domNewRegisterBtn = document.getElementById('newRegisterBtn');
+        
+        async function getData(search = '') {
+            return await request(`${CONFIG.api}/content/${search}`, userKey);
+        }
+
+        function displayData(data) {
+            if ( !(data instanceof Array) ) {
+                throw new Error('Al mostrar datos, se espera un array');
+            }
+
+            if (data.length < 1) {
+                domTableBody.innerText = 'No hay contenido para mostrar';
+                return;
+            }
+
+            const headers = ['Nombre', 'Apellidos', 'Teléfono', 'Correo electrónico', 'Dirección', ''];
+
+            domTableHeader.innerHTML = '';
+            for (const header of headers) {
+                const domHeaderCell = document.createElement('div');
+                domHeaderCell.innerText = header;
+                domTableHeader.appendChild(domHeaderCell);
+            }
+
+            domTableBody.innerHTML = '';
+            for (const elem of data) {
+                domTableBody.appendChild(createTableRow(elem));
+            }
+        }
+
+        function createTableRow(data) {
+            const domRow = document.createElement('div');
+            domRow.classList.add('panel__table__row');
+            
+            for (const entry in data) {
+                if (entry == 'emp_id') {
+                    continue;
+                }
+
+                const domCell = document.createElement('div');
+                domCell.innerText = data[entry];
+                domRow.appendChild(domCell);
+            }
+
+            const domButtonsCell = document.createElement('div');
+            
+            const domEditBtn = document.createElement('button');
+            domEditBtn.type = 'button';
+            domEditBtn.innerText = 'Editar';
+            domEditBtn.addEventListener('click', () => showEditDialog(data));
+
+            const domDeleteBtn = document.createElement('button');
+            domDeleteBtn.type = 'button';
+            domDeleteBtn.innerText = 'Borrar';
+            domDeleteBtn.classList.add('deleteBtn');
+            domDeleteBtn.addEventListener('click', () => showDeleteDialog(data));
+            
+            domButtonsCell.appendChild(domEditBtn);
+            domButtonsCell.appendChild(domDeleteBtn);
+
+            domRow.append(domButtonsCell);
+
+            return domRow;
+        }
+
+        function showDialog() {
+            domShadow.classList.remove('hidden');
+            domDialog.classList.remove('hidden');
+        }
+
+        function hideDialog() {
+            domShadow.classList.add('hidden');
+            domDialog.classList.add('hidden');
+        }
+
+        function createEditForm(data) {
+            const fields = [
+                {
+                    param: 'emp_name',
+                    title: 'Nombre'
+                },
+                {
+                    param: 'emp_lastname',
+                    title: 'Apellidos'
+                },
+                {
+                    param: 'emp_phone',
+                    title: 'Teléfono'
+                },
+                {
+                    param: 'emp_mail',
+                    title: 'Correo electrónico'
+                },
+                {
+                    param: 'emp_address',
+                    title: 'Dirección'
+                }
+            ];
+
+            const domForm = document.createElement('div');
+            domForm.classList.add('dialog__form');
+
+            const domFields = [];
+            const domInputs = [];
+            for (const field of fields) {
+                const domLabel = document.createElement('label');
+                const domName = document.createTextNode(field.title);
+                const domInput = document.createElement('input');
+                domInput.value = data[field.param] || '';
+                domInput.name = field.param;
+                domInput.autocomplete = 'off';
+                
+                domInputs.push(domInput);
+
+                domLabel.appendChild(domName);
+                domLabel.appendChild(domInput);
+
+                domFields.push(domLabel);
+            }
+
+            domFields.forEach(field => domForm.appendChild(field));
+            return domForm;
+        }
+
+        function showEditDialog(data) {
+            const domTitle = document.createElement('h1');
+            domTitle.innerText = 'Editar empleado';
+
+            const domEditForm = createEditForm(data);
+            const domInputs = domEditForm.querySelectorAll('input');
+           
+            const domButtonsContainer = document.createElement('div');
+            domButtonsContainer.classList.add('dialog__buttonsContainer');
+
+            const domAcceptButton = document.createElement('button');
+            domAcceptButton.innerText = 'Aceptar';
+            domAcceptButton.classList.add('acceptBtn');
+            domAcceptButton.addEventListener('click', () => {
+                const newData = { ...data };
+
+                for (const domInput of domInputs) {
+                    if (domInput.value == '') {
+                        alert('Llena todos los campos')
+                        return;
+                    }
+                    
+                    newData[domInput.name] = domInput.value;
+                }
+
+                editRow(data.emp_id, newData);
+                hideDialog();
+            });
+
+            const domCancelButton = document.createElement('button');
+            domCancelButton.innerText = 'Cancelar';
+            domCancelButton.classList.add('cancelBtn');
+            domCancelButton.addEventListener('click', () => hideDialog());
+
+            domButtonsContainer.appendChild(domAcceptButton);
+            domButtonsContainer.appendChild(domCancelButton);
+            
+            domDialog.innerHTML = '';
+            domDialog.appendChild(domTitle);
+            domDialog.appendChild(domEditForm);
+            domDialog.appendChild(domButtonsContainer);
+
+            showDialog();
+        }
+
+        function showDeleteDialog(data) {
+            const domText = document.createElement('h3');
+            domText.innerText = `¿Deseas borrar el registro de ${data.emp_name} ${data.emp_lastname}?`;
+
+            const domAcceptButton = document.createElement('button');
+            domAcceptButton.innerText = 'Aceptar';
+            domAcceptButton.classList.add('acceptBtn');
+            domAcceptButton.addEventListener('click', () => {
+                deleteRow(data.emp_id);
+                hideDialog();
+            });
+
+            const domCancelButton = document.createElement('button');
+            domCancelButton.innerText = 'Cancelar';
+            domCancelButton.classList.add('cancelBtn');
+            domCancelButton.addEventListener('click', () => hideDialog());
+
+            const domButtonsContainer = document.createElement('div');
+            domButtonsContainer.classList.add('dialog__buttonsContainer');
+
+            domButtonsContainer.append(domAcceptButton, domCancelButton);
+
+            domDialog.innerHTML = '';
+            domDialog.append(domText, domButtonsContainer);
+
+            showDialog();
+        }
+
+        function showNewRegisterDialog() {
+            const domTitle = document.createElement('h1');
+            domTitle.innerText = 'Registrar empleado';
+
+            const domEditForm = createEditForm({});
+            const domInputs = domEditForm.querySelectorAll('input');
+           
+            const domButtonsContainer = document.createElement('div');
+            domButtonsContainer.classList.add('dialog__buttonsContainer');
+
+            const domAcceptButton = document.createElement('button');
+            domAcceptButton.innerText = 'Aceptar';
+            domAcceptButton.classList.add('acceptBtn');
+            domAcceptButton.addEventListener('click', () => {
+                const newData = {};
+
+                for (const domInput of domInputs) {
+                    if (domInput.value == '') {
+                        alert('Llena todos los campos')
+                        return;
+                    }
+
+                    newData[domInput.name] = domInput.value;
+                }
+
+                register(newData);
+                hideDialog();
+            });
+
+            const domCancelButton = document.createElement('button');
+            domCancelButton.innerText = 'Cancelar';
+            domCancelButton.classList.add('cancelBtn');
+            domCancelButton.addEventListener('click', () => hideDialog());
+
+            domButtonsContainer.appendChild(domAcceptButton);
+            domButtonsContainer.appendChild(domCancelButton);
+            
+            domDialog.innerHTML = '';
+            domDialog.appendChild(domTitle);
+            domDialog.appendChild(domEditForm);
+            domDialog.appendChild(domButtonsContainer);
+
+            showDialog();
+        }
+
+        async function sendEditRequest(id, newData) {
+            const { emp_name, emp_lastname, emp_phone, emp_mail, emp_address } = newData;
+
+            if ( !(id && emp_name && emp_lastname && emp_phone && emp_mail && emp_address) ) {
+                throw new Error('Datos incompletos');
+            }
+            
+            await request(`${CONFIG.api}/content/`, userKey, 'PUT', newData);
+        }
+
+        async function sendDeleteRequest(id) {
+            await request(`${CONFIG.api}/content/`, userKey, 'DELETE', { emp_id: id });
+        }
+
+        async function sendRegisterRequest(data) {
+            const { emp_name, emp_lastname, emp_phone, emp_mail, emp_address } = data;
+
+            if ( !(emp_name && emp_lastname && emp_phone && emp_mail && emp_address) ) {
+                throw new Error('Datos incompletos');
+            }
+            
+            await request(`${CONFIG.api}/content/`, userKey, 'POST', data);
+        }
+
+        function editRow(id, newData) {
+            sendEditRequest(id, newData)
+                .then(res => {
+                    makeSearch(domSearchInput.value);
+                })
+                .catch(err => {
+                    alert('Ocurrió un error al editar el registro');
+                    console.log(err);
+                });
+        }
+        
+        function deleteRow(id) {
+            sendDeleteRequest(id)
+                .then(res => {
+                    makeSearch(domSearchInput.value);
+                })
+                .catch(err => {
+                    alert('Ocurrió un error al borrar el registro');
+                    console.log(err);
+                });
+        }
+
+        function register(data) {
+            sendRegisterRequest(data)
+                .then(res => {
+                    makeSearch(domSearchInput.value);
+                })
+                .catch(err => {
+                    alert('Ocurrió un error al crear el registro');
+                    console.log(err);
+                });
+        }
+
+        function makeSearch(value) {
+            const errorMsg = 'Ha ocurrido un error al realizar la búsqueda';
+
+            getData(value)
+                .then(res => {
+                    if (res.code >= 200 && res.code <= 299) {
+                        displayData(res.result || res.message);
+                    } else if (res.code == 404) {
+                        displayData([]);
+                    } else {
+                        alert(errorMsg);
+                        console.log(res);
+                    }
+                })
+                .catch(err => {
+                    alert(errorMsg);
+                    console.log(err);
+                });
+        }
+
+        domShadow.addEventListener('click', event => { if (event.target == domShadow) hideDialog(); });
+        domLogOut.addEventListener('click', logOut);
+        domSearchBtn.addEventListener('click', () => makeSearch(domSearchInput.value));
+        domSearchInput.addEventListener('input', () => makeSearch(domSearchInput.value));
+        domNewRegisterBtn.addEventListener('click', showNewRegisterDialog);
+
+        if (userKey) {
+            getData()
+                .then(res => {
+                    if (res.code >= 200 && res.code <= 299) {
+                        displayData(res.message);
+                        domContainer.hidden = false;
+                    } else {
+                        alert('Ha ocurrido un error al mostrar los datos.');
+                        console.log(`${res.message} (${res.code})`);
+                    }
+                })
+                .catch(err => {
+                    alert(err);
+                    logOut();
+                });
+        } else {
+            alert('Por favor, inicia sesión');
+            logOut();
+        }
+    </script>
+</body>
+</html>
